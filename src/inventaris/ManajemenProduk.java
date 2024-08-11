@@ -16,6 +16,8 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import java.sql.Connection;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -119,30 +121,27 @@ public class ManajemenProduk extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(32, 32, 32)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jButton1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton3))
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jButton4)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton5))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 779, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(32, 32, 32)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(jButton4)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                            .addComponent(jButton5))
+                        .addGroup(layout.createSequentialGroup()
+                            .addComponent(jButton1)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jButton2)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jButton3)))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 775, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(43, Short.MAX_VALUE))
             .addGroup(layout.createSequentialGroup()
-                .addGap(355, 355, 355)
+                .addGap(346, 346, 346)
                 .addComponent(jLabel1)
-                .addContainerGap(374, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -178,10 +177,11 @@ public class ManajemenProduk extends javax.swing.JFrame {
         model.setRowCount(0); // Reset table
 
         try (Connection conn = ConnectionJava.getConnection()) {
-            String sql = "SELECT * FROM tb_produk WHERE nama LIKE ? OR deskripsi LIKE ?";
+            String sql = "SELECT * FROM tb_produk WHERE nama LIKE ? OR deskripsi LIKE ? OR kategori LIKE ?";
             PreparedStatement pst = conn.prepareStatement(sql);
             pst.setString(1, "%" + searchQuery + "%");
             pst.setString(2, "%" + searchQuery + "%");
+            pst.setString(3, "%" + searchQuery + "%");
             ResultSet rs = pst.executeQuery();
 
             int no = 1;
@@ -189,6 +189,7 @@ public class ManajemenProduk extends javax.swing.JFrame {
                 Vector<Object> row = new Vector<>();
                 row.add(no++); // Nomor otomatis
                 row.add(rs.getString("nama"));
+                row.add(rs.getString("kategori"));
                 row.add(rs.getString("deskripsi"));
                 row.add(rs.getInt("stok"));
                 row.add(rs.getDouble("harga"));
@@ -220,7 +221,7 @@ public class ManajemenProduk extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        DetailProduk aaaa = new DetailProduk();
+        DetailProduk aaaa = new DetailProduk(null);
         aaaa.setVisible(true);
         this.dispose();
     }//GEN-LAST:event_jButton4ActionPerformed
@@ -264,51 +265,92 @@ public class ManajemenProduk extends javax.swing.JFrame {
             panel.add(editButton);
             panel.add(deleteButton);
 
-            editButton.addActionListener(e -> {
-                fireEditingStopped();
-                int row = jTable1.getSelectedRow();
-                if (row >= 0) {
-                    // Ambil id_produk dari tabel (misalnya kolom pertama atau berdasarkan index kolom lain)
-                    int id_produk = (int) jTable1.getValueAt(row, 0);
-                    System.out.println("ID Produk yang dipilih: " + id_produk);
-                    // Buka form DetailProduk dengan id_produk yang dipilih
-                    DetailProduk detailProdukForm = new DetailProduk(id_produk);
-                    detailProdukForm.setVisible(true);
-                    // Tutup form ManajemenProduk jika diperlukan
-                    ManajemenProduk.this.dispose();
-                }
+            final int[] id_produk = new int[1];
 
-            });
+            try {
+                Connection conn = ConnectionJava.getConnection();
 
-            deleteButton.addActionListener(e -> {
-                fireEditingStopped();
-                int selectedRow = jTable1.getSelectedRow();
-                int id_produk = (int) jTable1.getValueAt(selectedRow, 0); // Ambil ID Produk dari kolom pertama
+                editButton.addActionListener(e -> {
+                    fireEditingStopped();
+                    int row = jTable1.getSelectedRow();
+                    if (row >= 0) {
 
-                // Konfirmasi penghapusan
-                int response = javax.swing.JOptionPane.showConfirmDialog(null,
-                        "Apakah Anda yakin ingin menghapus produk ini?",
-                        "Konfirmasi",
-                        javax.swing.JOptionPane.YES_NO_OPTION,
-                        javax.swing.JOptionPane.QUESTION_MESSAGE);
+                        try {
+                            String getName = jTable1.getValueAt(row, 1).toString();
+                            String getDeskripsi = jTable1.getValueAt(row, 3).toString();
+                            Integer getStok = (int) jTable1.getValueAt(row, 4);
+                            System.out.println("hhh");
+                            String getIdProdSql = "SELECT id_produk FROM tb_produk WHERE nama = ? AND deskripsi = ? AND stok = ?";
+                            PreparedStatement pst = conn.prepareStatement(getIdProdSql);
+                            pst.setString(1, getName);
+                            pst.setString(2, getDeskripsi);
+                            pst.setInt(3, getStok);
+                            ResultSet rs = pst.executeQuery();
 
-                if (response == javax.swing.JOptionPane.YES_OPTION) {
-                    try (Connection conn = ConnectionJava.getConnection()) {
-                        String sql = "DELETE FROM tb_produk WHERE id_produk = ?";
-                        PreparedStatement pst = conn.prepareStatement(sql);
-                        pst.setInt(1, id_produk);
-                        pst.executeUpdate();
+                            if (rs.next()) {
+                                id_produk[0] = rs.getInt("id_produk");
+                            }
+                            System.out.println(id_produk[0]);
 
-                        // Hapus baris dari tabel setelah berhasil dihapus dari database
-                        ((DefaultTableModel) jTable1.getModel()).removeRow(selectedRow);
-                        javax.swing.JOptionPane.showMessageDialog(null, "Produk berhasil dihapus.");
-
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                        javax.swing.JOptionPane.showMessageDialog(null, "Gagal menghapus produk: " + ex.getMessage());
+                            DetailProduk detailProdukForm = new DetailProduk(id_produk[0]);
+                            detailProdukForm.setVisible(true);
+                            // Close the current form if needed
+                            ManajemenProduk.this.dispose();
+                        } catch (SQLException ex) {
+                            Logger.getLogger(Transaksi.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
-                }
-            });
+
+                });
+
+                deleteButton.addActionListener(e -> {
+                    fireEditingStopped();
+                    int selectedRow = jTable1.getSelectedRow();
+                    if (selectedRow >= 0) {
+                        String getName = jTable1.getValueAt(selectedRow, 1).toString();
+                        String getDeskripsi = jTable1.getValueAt(selectedRow, 3).toString();
+                        Integer getStok = (int) jTable1.getValueAt(selectedRow, 4);
+                        System.out.println(getName);
+                        String getIdTransSql = "SELECT id_produk FROM tb_produk WHERE nama = ? AND deskripsi = ? AND stok = ?";
+                        try (PreparedStatement pstt = conn.prepareStatement(getIdTransSql)) {
+                            pstt.setString(1, getName);
+                            pstt.setString(2, getDeskripsi);
+                            pstt.setInt(3, getStok);
+                            ResultSet rs = pstt.executeQuery();
+
+                            if (rs.next()) {
+                                id_produk[0] = rs.getInt("id_produk");
+                            }
+
+                            // Konfirmasi penghapusan
+                            int response = javax.swing.JOptionPane.showConfirmDialog(null,
+                                    "Apakah Anda yakin ingin menghapus produk ini?",
+                                    "Konfirmasi",
+                                    javax.swing.JOptionPane.YES_NO_OPTION,
+                                    javax.swing.JOptionPane.QUESTION_MESSAGE);
+
+                            if (response == javax.swing.JOptionPane.YES_OPTION) {
+                                String sql = "DELETE FROM tb_produk WHERE id_produk = ?";
+                                try (PreparedStatement psttt = conn.prepareStatement(sql)) {
+                                    psttt.setInt(1, id_produk[0]);
+                                    psttt.executeUpdate();
+
+                                    // Hapus baris dari tabel setelah berhasil dihapus dari database
+                                    ((DefaultTableModel) jTable1.getModel()).removeRow(selectedRow);
+                                    javax.swing.JOptionPane.showMessageDialog(null, "Produk berhasil dihapus.");
+                                }
+                            }
+//                            ManajemenProduk prod = new ManajemenProduk();
+//                            prod.setVisible(true);
+                        } catch (SQLException ex) {
+                            Logger.getLogger(Transaksi.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+
+                                    });
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
 
         }
 

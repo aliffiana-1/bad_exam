@@ -6,7 +6,9 @@ package inventaris;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JOptionPane;
 
 public class DetailProduk extends javax.swing.JFrame {
@@ -18,36 +20,73 @@ public class DetailProduk extends javax.swing.JFrame {
         // Tambahkan kode untuk memuat data produk ke dalam form berdasarkan id
     }
 
-    public DetailProduk() {
+    public DetailProduk(Integer id_produk) {
         initComponents();
-         jLabel7.setText("0");
-    }
-
-    public DetailProduk(int id_produk) {
-        initComponents();
-        this.id_produk = id_produk;
-        loadProductData();
-    }
-
-    private void loadProductData() {
-        String sql = "SELECT * FROM tb_produk WHERE id_produk = ?";
-
-        try (Connection conn = ConnectionJava.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, id_produk);
-            var rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                jTextField1.setText(rs.getString("nama"));
-                jTextField2.setText(String.valueOf(rs.getDouble("harga")));
-                jSpinner1.setValue(0);
-                jTextArea1.setText(rs.getString("deskripsi"));
-                jLabel7.setText(String.valueOf(rs.getInt("stok")));
-            }else {
-                jLabel7.setText("0");
+//        this.id_produk = id_produk;
+        if (id_produk != null) {
+            this.id_produk = id_produk;
+            loadProductData(id_produk);
+        } else {
+            
+            jLabel7.setText("0");
+            loadProductData(null);
+        }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Failed to load product data. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+
+    private void loadProductData(Integer id_produk) {
+        if (id_produk != null) {
+            String sql = "SELECT * FROM tb_produk WHERE id_produk = ?";
+
+            try (Connection conn = ConnectionJava.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, id_produk);
+                var rs = pstmt.executeQuery();
+
+                if (rs.next()) {
+                    jTextField1.setText(rs.getString("nama"));
+                    jTextField2.setText(String.valueOf(rs.getDouble("harga")));
+                    jSpinner1.setValue(0);
+                    jTextArea1.setText(rs.getString("deskripsi"));
+                    jLabel7.setText(String.valueOf(rs.getInt("stok")));
+                } else {
+                    jLabel7.setText("0");
+                }
+                int productId = rs.getInt("id_produk");
+                updateComboBox(productId);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Failed to load product data. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            updateComboBox(null);
+        }
+    }
+
+    private void updateComboBox(Integer selectedProductId) {
+
+        DefaultComboBoxModel<String> comboBoxModel = new DefaultComboBoxModel<>();
+
+        comboBoxModel.addElement("Phone");
+        comboBoxModel.addElement("Mouse");
+        comboBoxModel.addElement("Laptop");
+        comboBoxModel.addElement("Charger");
+        jComboBox1.setModel(comboBoxModel);
+
+        if (selectedProductId != null) {
+            try (Connection conn = ConnectionJava.getConnection()) {
+                String productNameSql = "SELECT kategori FROM tb_produk WHERE id_produk = ?";
+                PreparedStatement pstProductName = conn.prepareStatement(productNameSql);
+                pstProductName.setInt(1, selectedProductId);
+                ResultSet rsProductName = pstProductName.executeQuery();
+
+                if (rsProductName.next()) {
+                    String selectedProductName = rsProductName.getString("kategori");
+                    jComboBox1.setSelectedItem(selectedProductName);
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Failed to update combo box. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -77,6 +116,8 @@ public class DetailProduk extends javax.swing.JFrame {
         jButton2 = new javax.swing.JButton();
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
+        jLabel8 = new javax.swing.JLabel();
+        jComboBox1 = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -140,55 +181,55 @@ public class DetailProduk extends javax.swing.JFrame {
 
         jLabel7.setText(" ");
 
+        jLabel8.setText("Kategori");
+
+        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addGap(38, 38, 38)
+                .addComponent(jButton7)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton8)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(38, 38, 38)
-                        .addComponent(jButton7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton8)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton6))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(258, 258, 258)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(79, 79, 79)
-                                .addComponent(jLabel2))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(13, 13, 13)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(jButton1)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                        .addComponent(jButton2)
-                                        .addGap(111, 111, 111))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                                .addGroup(layout.createSequentialGroup()
-                                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                                    .addGap(58, 58, 58))
-                                                .addGroup(layout.createSequentialGroup()
-                                                    .addComponent(jLabel6)
-                                                    .addGap(18, 18, 18)))
-                                            .addGroup(layout.createSequentialGroup()
-                                                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                                .addGap(60, 60, 60))
-                                            .addComponent(jLabel5))
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addComponent(jSpinner1)
-                                            .addComponent(jTextField1)
-                                            .addComponent(jTextField2)
-                                            .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                            .addComponent(jScrollPane1))))))))
-                .addContainerGap(248, Short.MAX_VALUE))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(jLabel5))
+                                .addGap(31, 31, 31))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 79, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.TRAILING))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 234, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextField2, javax.swing.GroupLayout.DEFAULT_SIZE, 235, Short.MAX_VALUE)
+                            .addComponent(jTextField1)
+                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING)
+                                .addComponent(jSpinner1, javax.swing.GroupLayout.Alignment.LEADING))))
+                    .addComponent(jButton6))
+                .addContainerGap(271, Short.MAX_VALUE))
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(337, 337, 337)
+                        .addComponent(jLabel2))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(317, 317, 317)
+                        .addComponent(jButton1)
+                        .addGap(18, 18, 18)
+                        .addComponent(jButton2)))
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -198,21 +239,25 @@ public class DetailProduk extends javax.swing.JFrame {
                     .addComponent(jButton6)
                     .addComponent(jButton8)
                     .addComponent(jButton7))
-                .addGap(35, 35, 35)
+                .addGap(27, 27, 27)
                 .addComponent(jLabel2)
-                .addGap(35, 35, 35)
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(12, 12, 12)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(9, 9, 9)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel8)
+                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 12, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
                     .addComponent(jLabel7))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 11, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
                     .addComponent(jSpinner1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -221,9 +266,9 @@ public class DetailProduk extends javax.swing.JFrame {
                     .addComponent(jLabel5)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jButton2)
-                    .addComponent(jButton1))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton1)
+                    .addComponent(jButton2))
                 .addGap(36, 36, 36))
         );
 
@@ -295,14 +340,16 @@ public class DetailProduk extends javax.swing.JFrame {
     private void insertProduct(String nama, double harga, int stok) {
 
         String deskripsi = jTextArea1.getText();
+        String kategori = (String) jComboBox1.getSelectedItem();
 
-        String sql = "INSERT INTO tb_produk (nama, harga, stok, deskripsi) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO tb_produk (nama, harga, stok, deskripsi, kategori) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = ConnectionJava.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, nama);
             pstmt.setDouble(2, harga);
             pstmt.setInt(3, stok);
             pstmt.setString(4, deskripsi);
+            pstmt.setString(5, kategori);
             pstmt.executeUpdate();
             JOptionPane.showMessageDialog(this, "Product inserted successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
@@ -312,45 +359,44 @@ public class DetailProduk extends javax.swing.JFrame {
     }
 
     private void updateProduct(int productId, String nama, double harga, int newStok) {
-    String deskripsi = jTextArea1.getText();
-    String selectSql = "SELECT stok FROM tb_produk WHERE id_produk = ?";
-    String updateSql = "UPDATE tb_produk SET nama = ?, harga = ?, stok = ?, deskripsi = ? WHERE id_produk = ?";
+        String deskripsi = jTextArea1.getText();
+        String kategori = (String) jComboBox1.getSelectedItem();
+        String selectSql = "SELECT stok FROM tb_produk WHERE id_produk = ?";
+        String updateSql = "UPDATE tb_produk SET nama = ?, harga = ?, stok = ?, deskripsi = ?, kategori = ? WHERE id_produk = ?";
 
-    try (Connection conn = ConnectionJava.getConnection();
-         PreparedStatement selectStmt = conn.prepareStatement(selectSql);
-         PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+        try (Connection conn = ConnectionJava.getConnection(); PreparedStatement selectStmt = conn.prepareStatement(selectSql); PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
 
-        // Retrieve current stock
-        selectStmt.setInt(1, productId);
-        var rs = selectStmt.executeQuery();
+            // Retrieve current stock
+            selectStmt.setInt(1, productId);
+            var rs = selectStmt.executeQuery();
 
-        if (rs.next()) {
-            int currentStok = rs.getInt("stok");
+            if (rs.next()) {
+                int currentStok = rs.getInt("stok");
 
-            // Calculate new stock
-            int updatedStok = currentStok + newStok;
+                // Calculate new stock
+                int updatedStok = currentStok + newStok;
 
-            // Set parameters for the update statement
-            updateStmt.setString(1, nama);
-            updateStmt.setDouble(2, harga);
-            updateStmt.setInt(3, updatedStok);
-            updateStmt.setString(4, deskripsi);
-            updateStmt.setInt(5, productId);
+                // Set parameters for the update statement
+                updateStmt.setString(1, nama);
+                updateStmt.setDouble(2, harga);
+                updateStmt.setInt(3, updatedStok);
+                updateStmt.setString(4, deskripsi);
+                updateStmt.setString(5, kategori);
+                updateStmt.setInt(6, productId);
 
-            // Execute the update
-            updateStmt.executeUpdate();
+                // Execute the update
+                updateStmt.executeUpdate();
 
-            JOptionPane.showMessageDialog(this, "Product updated successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, "Product not found.", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Product updated successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Product not found.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to update product. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
         }
-
-    } catch (SQLException e) {
-        e.printStackTrace();
-        JOptionPane.showMessageDialog(this, "Failed to update product. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
     }
-}
-
 
     /**
      * @param args the command line arguments
@@ -383,7 +429,7 @@ public class DetailProduk extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new DetailProduk().setVisible(true);
+                new DetailProduk(null).setVisible(true);
             }
         });
     }
@@ -394,6 +440,7 @@ public class DetailProduk extends javax.swing.JFrame {
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
+    private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -401,6 +448,7 @@ public class DetailProduk extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
+    private javax.swing.JLabel jLabel8;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JSpinner jSpinner1;
     private javax.swing.JTextArea jTextArea1;
